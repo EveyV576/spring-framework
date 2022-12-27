@@ -21,7 +21,6 @@ import java.io.ObjectInputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,21 +84,17 @@ import org.springframework.util.StringUtils;
 public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 		implements ClassFilter, IntroductionAwareMethodMatcher, BeanFactoryAware {
 
-	private static final Set<PointcutPrimitive> SUPPORTED_PRIMITIVES = new HashSet<>();
-
-	static {
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.EXECUTION);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.ARGS);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.REFERENCE);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.THIS);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.TARGET);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.WITHIN);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_ANNOTATION);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_WITHIN);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_ARGS);
-		SUPPORTED_PRIMITIVES.add(PointcutPrimitive.AT_TARGET);
-	}
-
+	private static final Set<PointcutPrimitive> SUPPORTED_PRIMITIVES = Set.of(
+			PointcutPrimitive.EXECUTION,
+			PointcutPrimitive.ARGS,
+			PointcutPrimitive.REFERENCE,
+			PointcutPrimitive.THIS,
+			PointcutPrimitive.TARGET,
+			PointcutPrimitive.WITHIN,
+			PointcutPrimitive.AT_ANNOTATION,
+			PointcutPrimitive.AT_WITHIN,
+			PointcutPrimitive.AT_ARGS,
+			PointcutPrimitive.AT_TARGET);
 
 	private static final Log logger = LogFactory.getLog(AspectJExpressionPointcut.class);
 
@@ -205,8 +200,8 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 */
 	@Nullable
 	private ClassLoader determinePointcutClassLoader() {
-		if (this.beanFactory instanceof ConfigurableBeanFactory) {
-			return ((ConfigurableBeanFactory) this.beanFactory).getBeanClassLoader();
+		if (this.beanFactory instanceof ConfigurableBeanFactory cbf) {
+			return cbf.getBeanClassLoader();
 		}
 		if (this.pointcutDeclarationScope != null) {
 			return this.pointcutDeclarationScope.getClassLoader();
@@ -340,10 +335,10 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 		try {
 			MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
 			targetObject = mi.getThis();
-			if (!(mi instanceof ProxyMethodInvocation)) {
+			if (!(mi instanceof ProxyMethodInvocation _pmi)) {
 				throw new IllegalStateException("MethodInvocation is not a Spring ProxyMethodInvocation: " + mi);
 			}
-			pmi = (ProxyMethodInvocation) mi;
+			pmi = _pmi;
 			thisObject = pmi.getProxy();
 		}
 		catch (IllegalStateException ex) {
@@ -409,8 +404,8 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	}
 
 	private RuntimeTestWalker getRuntimeTestWalker(ShadowMatch shadowMatch) {
-		if (shadowMatch instanceof DefensiveShadowMatch) {
-			return new RuntimeTestWalker(((DefensiveShadowMatch) shadowMatch).primary);
+		if (shadowMatch instanceof DefensiveShadowMatch defensiveShadowMatch) {
+			return new RuntimeTestWalker(defensiveShadowMatch.primary);
 		}
 		return new RuntimeTestWalker(shadowMatch);
 	}
